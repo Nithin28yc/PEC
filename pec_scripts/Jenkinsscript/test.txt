@@ -1,0 +1,24 @@
+def label = "mypod-${UUID.randomUUID().toString()}"
+def serviceaccount = "jenkins-admin" 
+podTemplate(label: label,serviceAccount: serviceaccount, containers: [
+containerTemplate(name: 'maven', image: 'maven:3.8-openjdk-11', ttyEnabled: true, command: 'cat'),
+containerTemplate(name: 'kubectl', image: 'smesch/kubectl', ttyEnabled: true, command: 'cat',
+volumes: [secretVolume(secretName: 'kube-config', mountPath: '/root/.kube')]
+)]) {
+node(label)
+{
+    stage('Choas-mesh')
+    { 
+        container('kubectl') 
+        {
+ withCredentials([file(credentialsId: 'kubeconfig', variable: 'FILE')])
+ {
+ //    sh 'export PATH="/usr/bin/aws" '
+ //    sh 'mkdir config; cp $FILE config/clusterconfig'
+
+     sh "kubectl get pods --kubeconfig ${FILE} -n chaos-mesh"
+ }
+}
+}
+}
+}

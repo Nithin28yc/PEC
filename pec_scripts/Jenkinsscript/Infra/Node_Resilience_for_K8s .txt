@@ -1,0 +1,41 @@
+def label = "mypod-${UUID.randomUUID().toString()}"
+def serviceaccount = "multicloud"
+
+podTemplate(label: label,serviceAccount: serviceaccount, containers: [
+containerTemplate(name: 'maven', image: 'maven:3.8-openjdk-11', ttyEnabled: true, command: 'cat'),
+ containerTemplate(name: 'kubectl', image: 'smesch/kubectl', ttyEnabled: true, command: 'cat'),
+                           
+containerTemplate(name: 'docker', image: 'docker:1.11', ttyEnabled: true, command: 'cat'),
+ containerTemplate(name: 'zap', image: 'owasp/zap2docker-stable', privileged: true, ttyEnabled: true, command: 'cat'),
+containerTemplate(name: 'ubuntu', image: 'ubuntu', ttyEnabled: true, command: 'cat',),
+containerTemplate(name: 'nmap', image: 'uzyexe/nmap', ttyEnabled: true, slaveConnectTimeout:300, command: 'cat'),
+]) {
+//currentBuild.description = "GDPR"
+node(label) {
+
+stage('Choas-mesh') {
+    
+    git branch:"main", url:"https://aksmecst.azureaiondevops.com/gitlab/root/choas.git", credentialsId:"gitlab"
+	container('kubectl') {	
+
+     def namespc = "${NameSpace}"
+    def expname = "${ExperimentName}"
+    def memwork = "${memoryworker}"
+	def memsize = "${memorysize}"
+	def cpuwork = "${cpuworker}"
+	def cpuload = "${cpuload}"
+	def duration = "${time}"
+    
+withCredentials([file(credentialsId: 'kubeconfig', variable: 'FILE')])
+ {
+      
+        sh "sed -e 's|nameSpace|${namespc}|g;s|experimentName|${expname}|g;s|memoryworker|${memwork}|g;s|memorysize|${memsize}|g;s|cpuworker|${cpuwork}|g;s|cpuload|${cpuload}|g;s|time|${duration}|g' nodeResilience.yaml | kubectl apply -f - --validate=false --kubeconfig ${FILE} -n ${namespc}"
+
+        sh "sleep 2"
+        sh "kubectl get pods --kubeconfig ${FILE} -n ${namespc}"
+ }
+
+}
+}
+}
+}

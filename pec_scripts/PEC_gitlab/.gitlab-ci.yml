@@ -1,0 +1,26 @@
+image: ${CI_REGISTRY}/root/docker_registry/aiindevops.azurecr.io/python:3.8.13-alpine
+
+stages:
+  - Generate-config  
+  - Triggerscontrol
+
+generate-config:
+  stage: Generate-config  
+  script:
+    - |
+      files="$factor"
+      echo "$files"
+      chmod +x factor/dynamic_control_pipeline_generator.py
+      factor/dynamic_control_pipeline_generator.py ${files}
+  artifacts:
+    paths:
+      - factor/gitlab/controlsexecutor.gitlab-ci.yml
+
+Factor:
+  stage: Triggerscontrol
+  trigger:
+        include:
+        - artifact: factor/gitlab/controlsexecutor.gitlab-ci.yml
+          job: generate-config
+        strategy: depend
+       

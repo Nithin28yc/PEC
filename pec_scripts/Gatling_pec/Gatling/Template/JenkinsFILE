@@ -1,0 +1,53 @@
+def label = "mypod-${UUID.randomUUID().toString()}"
+podTemplate(label: label, containers: [
+    containerTemplate(name: 'maven', image: 'maven:3.3.9-jdk-8-alpine', ttyEnabled: true, command: 'cat')
+      ]) 
+{
+    node(label){
+	 
+        stage('Get a Maven project') {
+			container('maven') {
+			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: <<'jenkinsID'>>, usernameVariable: 'USER', passwordVariable: 'PASS']]) 
+{          
+             try {
+			 sh '''
+				apk update
+				apk add git
+				git clone https://:@innersource.accenture.com/scm/ethan/ct_performance_security.git --branch <<branchname>> --single-branch
+				'''
+}
+catch (Exception e)
+            {
+                echo e
+            }
+            finally
+            {
+                echo "This is finally stage"
+                //sh "sleep 90"
+                              
+            }
+
+           }
+       }	
+}			
+		stage ('Gatling Simulation'){ 
+		container('maven')
+		{
+					sh '''		
+							cd $(pwd)/ct_performance_security/Gatling
+                            mvn gatling:test -Dgatling.simulationClass=<<Packagename>>.<<Classname>>
+						    
+						  
+						
+							
+                      '''  
+                      	gatlingArchive()
+                     
+					 
+          }  
+			}
+            
+        }
+		}
+        
+          

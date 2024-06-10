@@ -1,0 +1,18 @@
+kind: HTTPChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: nameSpace
+  name: experimentName
+spec:
+  selector:
+    namespaces:
+      - nameSpace
+    labelSelectors:
+      app: podName
+  mode: all
+  target: Request
+  delay: Delay
+  port: 80
+  path: '*'
+  method: Method
+  duration: time

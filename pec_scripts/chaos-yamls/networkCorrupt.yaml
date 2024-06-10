@@ -1,0 +1,18 @@
+kind: NetworkChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: nameSpace
+  name: experimentName
+spec:
+  selector:
+    namespaces:
+      - nameSpace
+    labelSelectors:
+      app: podName
+  mode: all
+  action: corrupt
+  duration: time
+  corrupt:
+    corrupt: 'Corrupt'
+    correlation: 'Correlation'
+  direction: to

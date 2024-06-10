@@ -1,0 +1,38 @@
+def label = "mypod-${UUID.randomUUID().toString()}"
+def serviceaccount = "multicloud"
+
+podTemplate(label: label,serviceAccount: serviceaccount, containers: [
+containerTemplate(name: 'maven', image: 'maven:3.8-openjdk-11', ttyEnabled: true, command: 'cat'),
+ containerTemplate(name: 'kubectl', image: 'smesch/kubectl', ttyEnabled: true, command: 'cat'),
+                           
+containerTemplate(name: 'docker', image: 'docker:1.11', ttyEnabled: true, command: 'cat'),
+ containerTemplate(name: 'zap', image: 'owasp/zap2docker-stable', privileged: true, ttyEnabled: true, command: 'cat'),
+containerTemplate(name: 'ubuntu', image: 'ubuntu', ttyEnabled: true, command: 'cat',),
+containerTemplate(name: 'nmap', image: 'uzyexe/nmap', ttyEnabled: true, slaveConnectTimeout:300, command: 'cat'),
+]) {
+//currentBuild.description = "GDPR"
+node(label) {
+
+stage('Choas-mesh') {
+    
+    git branch:"main", url:"https://aksmecst.azureaiondevops.com/gitlab/root/choas.git", credentialsId:"gitlab"
+	container('kubectl') {	
+
+
+    
+withCredentials([file(credentialsId: 'kubeconfig', variable: 'FILE')])
+ {
+      
+        sh "kubectl apply -f workflow.yaml --validate=false --kubeconfig ${FILE} -n test"
+
+        sh "sleep 2"
+        sh "kubectl get pods --kubeconfig ${FILE} -n test"
+ }
+
+}
+}
+
+
+
+}
+}

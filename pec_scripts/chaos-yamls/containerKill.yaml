@@ -1,0 +1,15 @@
+kind: PodChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: nameSpace
+  name: experimentName
+spec:
+  selector:
+    namespaces:
+      - nameSpace
+    labelSelectors:
+      app: podName
+  mode: one
+  containerNames:
+    - ConatinerName
+  action: container-kill

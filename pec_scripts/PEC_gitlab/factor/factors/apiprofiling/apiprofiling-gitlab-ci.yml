@@ -1,0 +1,48 @@
+image: ${CI_REGISTRY}/root/docker_registry/aiindevops.azurecr.io/maven:3.8-openjdk-11
+
+stages:
+    - chaosmesh
+    - repo-clone
+    - gatling
+
+chaosmesh:
+    stage: chaosmesh
+    image: ${CI_REGISTRY}/root/docker_registry/aiindevops.azurecr.io/docker-kubectl:19.03-alpine
+    script:
+        - git clone https://:@kopsingressvalidation.continuoustestplatform.com/gitlab/root/choas.git
+        - cd choas      
+        - sed -i 's/nameSpace/${namespc}/g;s/experimentName/${expname}|/g;s/podName/${podname}/g;s/memoryworker/${memwork}/g;s/memorysize/${memsize}/g;s/cpuworker/${cpuwork}/g;s/cpuload/${cpuload}/g;s/time/${duration}/g' stress.yaml | kubectl apply -f - --validate=false --kubeconfig ${kubeconfig} -n ${namespc} 
+        
+        - kubectl apply -h
+        - sleep 2
+        - kubectl get pods --kubeconfig ${kubeconfig} -n ${namespc}
+
+
+
+Repo-Cloning:
+    stage: repo-clone
+    script:
+        - pwd
+        - git init
+        - git clone https://:@showcase2.continuoustestplatform.com/gitlab/root/pec.git -b master
+        - ls -lart
+        - cd pec
+    artifacts:
+        paths:
+            - pec/
+
+Gatling:
+    stage: gatling
+    script:
+        - cd pec
+        - ls
+        - cd Gatling
+        - ls
+        - pwd
+        - mvn gatling:test -Dusers="$Users" -Dramp="$Ramp" -Dgatling.simulationClass=apiprofilingpec.apiprofilingpec
+        - pwd
+        - cd `pwd`/target/gatling
+        - ls -lart
+    artifacts:
+        paths:
+            - $CI_PROJECT_DIR/pec/Gatling/target/gatling/
